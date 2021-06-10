@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key? key, required this.title}) : super(key: key);
   final String title;
 
   @override
@@ -41,23 +41,24 @@ class _MyHomePageState extends State<MyHomePage> {
         child: ListView(
           children: [
             ImageSelector(
-              url: null,
+              url: '',
               editable: true,
-              onFileSelection: (File file) {
+              onFileSelection: (File? file) {
                 print(file);
               },
-              onErrorMessage: (message) {
+              onErrorMessage: (String? message) {
                 print(message);
               },
             ),
             SizedBox(height: 100),
+
             ImageSelector(
-              url: null,
+              url: '',
               editable: true,
               height: 90,
               iconsBackgroundColor: Colors.red,
               handwritingVisible: false,
-              onFileSelection: (File file) {
+              onFileSelection: (File? file) {
                 print(file);
               },
               onErrorMessage: (message) {

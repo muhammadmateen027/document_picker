@@ -13,25 +13,25 @@ import 'package:signature/signature.dart';
 // ignore: must_be_immutable
 class ImageSelector extends StatefulWidget {
   final bool cameraVisible, galleryVisible, handwritingVisible;
-  final String imageAsset;
+  final String? imageAsset;
   final String url;
-  final Function(File file) onFileSelection;
+  final Function(File? file) onFileSelection;
   final double height;
   final bool editable;
   final BoxShape shape;
   String cameraPermissionErrorMessage;
   String galleryPermissionErrorMessage;
-  Function(String) onErrorMessage;
+  Function(String?)? onErrorMessage;
   String label;
   Color iconsBackgroundColor;
   Color iconColor;
   String imageNotSelectedMessage;
 
   ImageSelector({
-    Key key,
-    @required this.editable,
-    @required this.url,
-    @required this.onFileSelection,
+    Key? key,
+    required this.editable,
+    required this.url,
+    required this.onFileSelection,
     this.cameraVisible = true,
     this.galleryVisible = true,
     this.handwritingVisible = true,
@@ -56,13 +56,14 @@ class ImageSelector extends StatefulWidget {
 class _ImageSelectorState extends State<ImageSelector> {
   static const circularRadius = Radius.circular(16.0);
 
-  String _retrieveDataError;
-  File _image;
+  String _retrieveDataError = '';
+  late String imageUrl;
+  File? _image = null;
   bool showSignaturePad = false;
-  SignatureController _signatureController;
+  late SignatureController _signatureController;
   final picker = ImagePicker();
 
-  final BoxConstraints constraints =  BoxConstraints(
+  final BoxConstraints constraints = BoxConstraints(
     minHeight: 160,
     minWidth: 100,
   );
@@ -73,6 +74,8 @@ class _ImageSelectorState extends State<ImageSelector> {
 
   @override
   void initState() {
+    imageUrl = widget.url;
+
     _signatureController = SignatureController(
       penStrokeWidth: 2,
       penColor: Colors.green,
@@ -216,13 +219,13 @@ class _ImageSelectorState extends State<ImageSelector> {
                       return;
                     }
 
-                    Uint8List img = await _signatureController.toPngBytes();
+                    Uint8List? img = await _signatureController.toPngBytes();
 
                     int timestamp = new DateTime.now().millisecondsSinceEpoch;
                     final dir = await getTemporaryDirectory();
 
                     var file = File('${dir.absolute.path}/$timestamp.png');
-                    file.writeAsBytesSync(img);
+                    file.writeAsBytesSync(img!);
 
                     setImage(file);
                     setState(() {
@@ -307,8 +310,8 @@ class _ImageSelectorState extends State<ImageSelector> {
 
   Widget getUserAction(
     IconData icon, {
-    @required Function onTap,
-    @required BorderRadius borderRadius,
+    required VoidCallback onTap,
+    required BorderRadius borderRadius,
     bool showDivider = true,
   }) {
     return Row(
@@ -332,10 +335,10 @@ class _ImageSelectorState extends State<ImageSelector> {
   }
 
   Future<void> setImageByImageSource(ImageSource imageSource,
-      {Function(String) showErrorMessage}) async {
+      {Function(String?)? showErrorMessage}) async {
     bool isPermitted = await checkPermission(
       imageSource,
-      showErrorMessage: showErrorMessage,
+      showErrorMessage: showErrorMessage!,
     );
 
     if (isPermitted) {
@@ -349,26 +352,26 @@ class _ImageSelectorState extends State<ImageSelector> {
   }
 
   Future<bool> checkPermission(ImageSource imageSource,
-      {Function(String) showErrorMessage}) async {
+      {Function(String?)? showErrorMessage}) async {
     PermissionStatus status;
     if (imageSource == ImageSource.camera) {
       status = await Permission.camera.status;
       if (status.isDenied ||
           status.isPermanentlyDenied ||
           status.isRestricted) {
-        showErrorMessage(widget.cameraPermissionErrorMessage);
+        showErrorMessage!(widget.cameraPermissionErrorMessage);
         return false;
       }
     }
 
     status = await Permission.photos.status;
 
-    if (status.isDenied || status.isPermanentlyDenied || status.isRestricted) {
-      showErrorMessage(widget.galleryPermissionErrorMessage);
+    if (status.isPermanentlyDenied || status.isRestricted) {
+      showErrorMessage!(widget.galleryPermissionErrorMessage);
       return false;
     }
 
-    if (status.isUndetermined) {
+    if (status.isDenied) {
       if (imageSource == ImageSource.camera) {
         await Permission.camera.request();
         return true;
@@ -381,8 +384,8 @@ class _ImageSelectorState extends State<ImageSelector> {
     return true;
   }
 
-  void setImage(File file) {
-    widget.onFileSelection(file);
+  void setImage(File? file) {
+    widget.onFileSelection(file!);
 
     setState(() {
       _image = file;
@@ -391,44 +394,44 @@ class _ImageSelectorState extends State<ImageSelector> {
 
   Widget _getImageView() {
     Widget widgetView;
-    final Text retrieveError = _retrieveErrorWidget();
+    final Text? retrieveError = _retrieveErrorWidget();
     if (retrieveError != null) {
+
       return retrieveError;
     }
 
     if (_image == null) {
-      if (widget.url?.isEmpty ?? true) {
-        widgetView = Image.asset(widget.imageAsset, package: 'document_picker');
-      } else {
+      if (imageUrl.isNotEmpty) {
         widgetView = Image.network(
-          widget.url,
-          loadingBuilder: (BuildContext context, Widget child,
-              ImageChunkEvent loadingProgress) {
+          imageUrl,
+          loadingBuilder: (_, child, loadingProgress) {
             if (loadingProgress == null) return child;
             return Center(
               child: CircularProgressIndicator(
                 value: loadingProgress.expectedTotalBytes != null
                     ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes
+                    loadingProgress.expectedTotalBytes!
                     : null,
               ),
             );
           },
         );
+      } else {
+        widgetView = Image.asset(widget.imageAsset!, package: 'document_picker');
       }
     } else {
-      widgetView = Image.file(_image);
+      widgetView = Image.file(_image!);
     }
 
     return widgetView;
   }
 
-  Text _retrieveErrorWidget() {
-    if (_retrieveDataError == null) {
+  Text? _retrieveErrorWidget() {
+    if (_retrieveDataError.isEmpty) {
       return null;
     }
 
-    _retrieveDataError = null;
+    _retrieveDataError = '';
     return Text(_retrieveDataError);
   }
 
@@ -438,7 +441,7 @@ class _ImageSelectorState extends State<ImageSelector> {
       return;
     }
     if (response.file == null) {
-      _retrieveDataError = response.exception.code;
+      _retrieveDataError = response.exception!.code;
 
       return;
     }
@@ -448,7 +451,7 @@ class _ImageSelectorState extends State<ImageSelector> {
     }
 
     setState(() {
-      _image = File(response.file.path);
+      _image = File(response.file!.path);
     });
   }
 

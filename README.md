@@ -1,9 +1,8 @@
 # document_picker
 
-# document_picker 0.0.1
+# document_picker 0.0.2
 A document picker widget comes with latest feature to support in your project design.
 
-`Note: Null Safety will be included in few days`
 ## Purpose
 The goal of this project is to provide an ultimate widget for selecting/capturing the image.
 
@@ -33,7 +32,7 @@ Open your `android/app/src/main/AndroidManifest.xml` to add permission for Camer
 Add this to your package's pubspec.yaml file:
 
 dependencies:
-``` document_picker: ^0.0.1 ```
+``` document_picker: ^0.0.2 ```
 
 
 ## Sample Usage
@@ -41,12 +40,12 @@ dependencies:
 import 'package:document_picker/document_picker.dart';
 
 ImageSelector(
-              url: null,
+              url: '',
               editable: true,
-              onFileSelection: (File file) {
+              onFileSelection: (File? file) {
                 print(file);
               },
-              onErrorMessage: (message) {
+              onErrorMessage: (String? message) {
                 print(message);
               },
             )
