@@ -15,9 +15,10 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        buttonColor: Colors.deepPurple,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'Image picker'),
     );
   }
 }
@@ -40,7 +41,14 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: ListView(
           children: [
-            ImageSelector(
+            SizedBox(height: 30),
+            ProfilePicture(
+              url: '',
+              editable: true,
+              onFileSelection: (file) {},
+            ),
+            SizedBox(height: 40),
+            DocumentSelector(
               url: '',
               editable: true,
               onFileSelection: (File? file) {
@@ -50,9 +58,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 print(message);
               },
             ),
-            SizedBox(height: 100),
+            SizedBox(height: 40),
 
-            ImageSelector(
+            DocumentSelector(
               url: '',
               editable: true,
               height: 90,
@@ -65,6 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 print(message);
               },
             ),
+            SizedBox(height: 100),
           ],
         ),
       ),

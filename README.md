@@ -1,6 +1,6 @@
 # document_picker
 
-# document_picker 0.0.2
+# document_picker 0.0.3
 A document picker widget comes with latest feature to support in your project design.
 
 ## Purpose
@@ -10,8 +10,7 @@ Normally, you required to spend almost half of the day to write a code for e-KYC
 
 >Here I'm trying to save your time while providing you a package to import and do it whatever you want with it.
 
-![Simulator Screen Shot - iPhone 8 - 2021-05-10 at 15 45 32](https://user-images.githubusercontent.com/24449076/117623774-cbfd6180-b1a6-11eb-8689-ed966274994b.png)
-
+![Simulator Screen Shot - iPhone 8 - 2021-06-14 at 13 57 31](https://user-images.githubusercontent.com/24449076/121845740-77568480-cd18-11eb-8f92-49d317555a60.png)
 You are required to follow some steps:
 
 ## for iOS
@@ -22,24 +21,39 @@ Open your `ios/Runner/info.plist` to add permission for Camera and Gallery as:
  	<string>To select existing photos of your documents for e-KYC and proofs</string>`
 
 ## for Android
-Open your `android/app/src/main/AndroidManifest.xml` to add permission for Camera and Gallery as:
-- `<uses-permission android:name="android.permission.CAMERA" />`
-- `<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>`
+> Update sdk version to (minSdkVersion 21) in build.gradle
 
+Open your `android/app/src/main/AndroidManifest.xml` to add permission and activity for Camera, Gallery, and Cropper as:
+- ```xml 
+  <uses-permission android:name="android.permission.CAMERA" />
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+  
+  <activity
+                     android:name="com.yalantis.ucrop.UCropActivity"
+                     android:screenOrientation="portrait"
+                     android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>```
 
 
 ## Installing
 Add this to your package's pubspec.yaml file:
 
 dependencies:
-``` document_picker: ^0.0.2 ```
+``` document_picker: ^0.0.3 ```
 
 
 ## Sample Usage
 ```dart
 import 'package:document_picker/document_picker.dart';
 
-ImageSelector(
+ProfilePicture(
+              url: '',
+              editable: true,
+              onFileSelection: (file) {},
+            ),
+
+            SizedBox(height: 40),
+
+            DocumentSelector(
               url: '',
               editable: true,
               onFileSelection: (File? file) {
@@ -48,7 +62,7 @@ ImageSelector(
               onErrorMessage: (String? message) {
                 print(message);
               },
-            )
+            ),
 ```
 
 

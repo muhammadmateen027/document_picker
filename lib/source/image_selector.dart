@@ -10,10 +10,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:signature/signature.dart';
 
+import 'document_view.dart';
+import 'services.dart';
+
 // ignore: must_be_immutable
-class ImageSelector extends StatefulWidget {
+class DocumentSelector extends StatefulWidget {
   final bool cameraVisible, galleryVisible, handwritingVisible;
-  final String? imageAsset;
+  final String imageAsset;
   final String url;
   final Function(File? file) onFileSelection;
   final double height;
@@ -27,7 +30,7 @@ class ImageSelector extends StatefulWidget {
   Color iconColor;
   String imageNotSelectedMessage;
 
-  ImageSelector({
+  DocumentSelector({
     Key? key,
     required this.editable,
     required this.url,
@@ -41,21 +44,21 @@ class ImageSelector extends StatefulWidget {
     this.onErrorMessage,
     this.label = 'Select an image',
     this.cameraPermissionErrorMessage =
-        'Please allow camera permission from Settings',
+    'Please allow camera permission from Settings',
     this.galleryPermissionErrorMessage =
-        'Please allow gallery permission from Settings',
+    'Please allow gallery permission from Settings',
     this.imageNotSelectedMessage = 'You have not yet picked/captured an image.',
     this.iconsBackgroundColor = Colors.green,
     this.iconColor = Colors.white,
   }) : super(key: key);
 
   @override
-  _ImageSelectorState createState() => _ImageSelectorState();
+  _DocumentSelectorState createState() => _DocumentSelectorState();
 }
 
-class _ImageSelectorState extends State<ImageSelector> {
+class _DocumentSelectorState extends State<DocumentSelector> {
   static const circularRadius = Radius.circular(16.0);
-
+  late ThemeData theme;
   String _retrieveDataError = '';
   late String imageUrl;
   File? _image = null;
@@ -87,6 +90,7 @@ class _ImageSelectorState extends State<ImageSelector> {
 
   @override
   Widget build(BuildContext context) {
+    theme = Theme.of(context);
     return _getImageContainer(widget.label);
   }
 
@@ -98,7 +102,8 @@ class _ImageSelectorState extends State<ImageSelector> {
         color: Colors.grey,
         borderType: BorderType.RRect,
         radius: Radius.circular(
-            widget.shape == BoxShape.circle ? widget.height : 12),
+          widget.shape == BoxShape.circle ? widget.height : 12,
+        ),
         padding: EdgeInsets.all(3),
         child: ClipRRect(
           borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -110,27 +115,45 @@ class _ImageSelectorState extends State<ImageSelector> {
             ),
             child: widget.editable
                 ? Stack(
-                    children: <Widget>[
-                      Center(
-                        child: Platform.isAndroid
-                            ? FutureBuilder<void>(
-                                future: retrieveLostData(),
-                                builder: (_, snapshot) {
-                                  return _getFutureBuilderStates(snapshot);
-                                },
-                              )
-                            : _getImageView(),
-                      ),
-                      !showSignaturePad
-                          ? _imagePickers(title)
-                          : _signaturePad(),
-                    ],
+              children: <Widget>[
+                Center(
+                  child: Platform.isAndroid
+                      ? FutureBuilder<void>(
+                    future: Services.retrieveLostData(
+                        picker,
+                        onLoaded: (file) {
+                          setImage(file);
+                        },
+                        onError: (str) {
+                          _retrieveDataError = str;
+                        }
+                    ),
+                    builder: (_, snapshot) {
+                      return _getFutureBuilderStates(snapshot);
+                    },
                   )
-                : Container(
-                    width: double.infinity,
-                    color: Colors.white,
-                    child: _getImageView(),
+                      : DocumentView(
+                    image: _image,
+                    imageUrl: imageUrl,
+                    retrieveDataError: _retrieveDataError,
+                    asset: widget.imageAsset,
                   ),
+                ),
+                !showSignaturePad
+                    ? _imagePickers(title)
+                    : _signaturePad(),
+              ],
+            )
+                : Container(
+              width: double.infinity,
+              color: Colors.white,
+              child: DocumentView(
+                image: _image,
+                imageUrl: imageUrl,
+                retrieveDataError: _retrieveDataError,
+                asset: widget.imageAsset,
+              ),
+            ),
           ),
         ),
       ),
@@ -146,7 +169,12 @@ class _ImageSelectorState extends State<ImageSelector> {
       case ConnectionState.waiting:
         return const CircularProgressIndicator();
       case ConnectionState.done:
-        return _getImageView();
+        return DocumentView(
+          image: _image,
+          imageUrl: imageUrl,
+          retrieveDataError: _retrieveDataError,
+          asset: widget.imageAsset,
+        );
       default:
         if (snapshot.hasError) {
           return Text(
@@ -260,9 +288,8 @@ class _ImageSelectorState extends State<ImageSelector> {
         children: <Widget>[
           Text(
             title,
-            style: TextStyle(
+            style: theme.textTheme.bodyText2!.copyWith(
               color: Colors.white,
-              fontWeight: FontWeight.w500,
             ),
           ),
           SizedBox(height: 16.0),
@@ -271,35 +298,33 @@ class _ImageSelectorState extends State<ImageSelector> {
             children: <Widget>[
               widget.handwritingVisible
                   ? getUserAction(
-                      Icons.gesture,
-                      onTap: () {
-                        setState(() {
-                          showSignaturePad = true;
-                        });
-                      },
-                      borderRadius: handwritingBorderRadius,
-                    )
+                Icons.gesture,
+                onTap: () {
+                  setState(() {
+                    showSignaturePad = true;
+                  });
+                },
+                borderRadius: handwritingBorderRadius,
+              )
                   : Container(),
               widget.cameraVisible
                   ? getUserAction(
-                      Icons.add_a_photo,
-                      onTap: () => setImageByImageSource(
-                        ImageSource.camera,
-                        showErrorMessage: widget.onErrorMessage,
-                      ),
-                      borderRadius: cameraBorderRadius,
-                    )
+                Icons.add_a_photo,
+                onTap: () => setImageByImageSource(
+                  ImageSource.camera,
+                ),
+                borderRadius: cameraBorderRadius,
+              )
                   : Container(),
               widget.galleryVisible
                   ? getUserAction(
-                      Icons.attach_file,
-                      onTap: () => setImageByImageSource(
-                        ImageSource.gallery,
-                        showErrorMessage: widget.onErrorMessage,
-                      ),
-                      borderRadius: galleryBorderRadius,
-                      showDivider: false,
-                    )
+                Icons.attach_file,
+                onTap: () => setImageByImageSource(
+                  ImageSource.gallery,
+                ),
+                borderRadius: galleryBorderRadius,
+                showDivider: false,
+              )
                   : Container(),
             ],
           ),
@@ -309,11 +334,11 @@ class _ImageSelectorState extends State<ImageSelector> {
   }
 
   Widget getUserAction(
-    IconData icon, {
-    required VoidCallback onTap,
-    required BorderRadius borderRadius,
-    bool showDivider = true,
-  }) {
+      IconData icon, {
+        required VoidCallback onTap,
+        required BorderRadius borderRadius,
+        bool showDivider = true,
+      }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
@@ -334,11 +359,19 @@ class _ImageSelectorState extends State<ImageSelector> {
     );
   }
 
-  Future<void> setImageByImageSource(ImageSource imageSource,
-      {Function(String?)? showErrorMessage}) async {
-    bool isPermitted = await checkPermission(
+  Future<void> setImageByImageSource(ImageSource imageSource) async {
+
+    bool isPermitted = await Services.checkPermission(
       imageSource,
-      showErrorMessage: showErrorMessage!,
+      permissionError: (permission) {
+        if (permission == Permission.camera) {
+          widget.onErrorMessage!(widget.cameraPermissionErrorMessage);
+          return;
+        }
+
+        widget.onErrorMessage!(widget.galleryPermissionErrorMessage);
+        return;
+      },
     );
 
     if (isPermitted) {
@@ -346,42 +379,19 @@ class _ImageSelectorState extends State<ImageSelector> {
       if (pickedFile == null) {
         return;
       }
-      setImage(File(pickedFile.path));
+
+      Services.cropImage(
+        File(pickedFile.path),
+        onCrop: (croppedFile) {
+          if (croppedFile == null) {
+            widget.onErrorMessage!(widget.imageNotSelectedMessage);
+          }
+
+          setImage(croppedFile);
+        },
+      );
       return;
     }
-  }
-
-  Future<bool> checkPermission(ImageSource imageSource,
-      {Function(String?)? showErrorMessage}) async {
-    PermissionStatus status;
-    if (imageSource == ImageSource.camera) {
-      status = await Permission.camera.status;
-      if (status.isDenied ||
-          status.isPermanentlyDenied ||
-          status.isRestricted) {
-        showErrorMessage!(widget.cameraPermissionErrorMessage);
-        return false;
-      }
-    }
-
-    status = await Permission.photos.status;
-
-    if (status.isPermanentlyDenied || status.isRestricted) {
-      showErrorMessage!(widget.galleryPermissionErrorMessage);
-      return false;
-    }
-
-    if (status.isDenied) {
-      if (imageSource == ImageSource.camera) {
-        await Permission.camera.request();
-        return true;
-      }
-
-      await Permission.photos.request();
-      return true;
-    }
-
-    return true;
   }
 
   void setImage(File? file) {
@@ -392,74 +402,11 @@ class _ImageSelectorState extends State<ImageSelector> {
     });
   }
 
-  Widget _getImageView() {
-    Widget widgetView;
-    final Text? retrieveError = _retrieveErrorWidget();
-    if (retrieveError != null) {
-
-      return retrieveError;
-    }
-
-    if (_image == null) {
-      if (imageUrl.isNotEmpty) {
-        widgetView = Image.network(
-          imageUrl,
-          loadingBuilder: (_, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                    loadingProgress.expectedTotalBytes!
-                    : null,
-              ),
-            );
-          },
-        );
-      } else {
-        widgetView = Image.asset(widget.imageAsset!, package: 'document_picker');
-      }
-    } else {
-      widgetView = Image.file(_image!);
-    }
-
-    return widgetView;
-  }
-
-  Text? _retrieveErrorWidget() {
-    if (_retrieveDataError.isEmpty) {
-      return null;
-    }
-
-    _retrieveDataError = '';
-    return Text(_retrieveDataError);
-  }
-
-  Future<void> retrieveLostData() async {
-    final LostData response = await picker.getLostData();
-    if (response == null || response.isEmpty) {
-      return;
-    }
-    if (response.file == null) {
-      _retrieveDataError = response.exception!.code;
-
-      return;
-    }
-
-    if (response.type == RetrieveType.video) {
-      return;
-    }
-
-    setState(() {
-      _image = File(response.file!.path);
-    });
-  }
-
   void setBorderRadius() {
     handwritingBorderRadius = BorderRadius.horizontal(
       left: widget.handwritingVisible ? circularRadius : Radius.zero,
       right: widget.handwritingVisible &&
-              !(widget.cameraVisible || widget.galleryVisible)
+          !(widget.cameraVisible || widget.galleryVisible)
           ? circularRadius
           : Radius.zero,
     );
@@ -475,7 +422,7 @@ class _ImageSelectorState extends State<ImageSelector> {
 
     galleryBorderRadius = BorderRadius.horizontal(
       left: widget.galleryVisible &&
-              !(widget.handwritingVisible || widget.cameraVisible)
+          !(widget.handwritingVisible || widget.cameraVisible)
           ? circularRadius
           : Radius.zero,
       right: widget.galleryVisible ? circularRadius : Radius.zero,
