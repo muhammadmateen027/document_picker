@@ -1,3 +1,7 @@
+## [0.0.4] - June 14, 2021
+
+* Update permission and remove print statement
+
 ## [0.0.3] - June 14, 2021
 
 * Added new view for profile picture selection

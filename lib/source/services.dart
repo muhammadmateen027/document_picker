@@ -48,15 +48,13 @@ class Services {
   static Future<bool> checkPermission(ImageSource imageSource,
       {Function(Permission?)? permissionError}) async {
     PermissionStatus status;
-    print(imageSource);
-    print(await Permission.camera.status);
 
     if (imageSource == ImageSource.camera) {
       status = await Permission.camera.status;
 
       if (status.isDenied) {
         await Permission.camera.request();
-        return true;
+        return false;
       }
 
       if (status.isPermanentlyDenied || status.isRestricted) {
@@ -72,11 +70,7 @@ class Services {
       return false;
     }
 
-    if (status.isDenied) {
-      await Permission.photos.request();
-      return true;
-    }
-
+    await Permission.photos.request();
     return true;
   }
 
