@@ -16,11 +16,12 @@ class ProfilePicture extends StatefulWidget {
   final double width;
   final bool editable;
   final BoxShape shape;
-  String cameraPermissionErrorMessage;
-  String galleryPermissionErrorMessage;
-  Function(String?)? onErrorMessage;
-  String label;
-  String imageNotSelectedMessage;
+  final String cameraPermissionErrorMessage;
+  final String galleryPermissionErrorMessage;
+  final Function(String?)? onErrorMessage;
+  final String label;
+  final String imageNotSelectedMessage;
+  final CameraDevice preferredCameraDevice;
 
   ProfilePicture({
     Key? key,
@@ -36,12 +37,12 @@ class ProfilePicture extends StatefulWidget {
     this.onErrorMessage,
     this.label = 'Select',
     this.cameraPermissionErrorMessage =
-    'Please allow camera permission from Settings',
+        'Please allow camera permission from Settings',
     this.galleryPermissionErrorMessage =
-    'Please allow gallery permission from Settings',
+        'Please allow gallery permission from Settings',
     this.imageNotSelectedMessage = 'You have not yet picked/captured an image.',
+    this.preferredCameraDevice = CameraDevice.rear,
   }) : super(key: key);
-
 
   @override
   _ProfilePictureState createState() => _ProfilePictureState();
@@ -80,68 +81,68 @@ class _ProfilePictureState extends State<ProfilePicture> {
           alignment: Alignment.center,
           child: Platform.isAndroid
               ? FutureBuilder<void>(
-            future: Services.retrieveLostData(
-                picker,
-                onLoaded: (file) {
-                  setImage(file);
-                },
-                onError: (str) {
-                  _retrieveDataError = str;
-                }
-            ),
-            builder: (_, snapshot) {
-              return _getFutureBuilderStates(snapshot);
-            },
-          )
+                  future: Services.retrieveLostData(picker, onLoaded: (file) {
+                    setImage(file);
+                  }, onError: (str) {
+                    _retrieveDataError = str;
+                  }),
+                  builder: (_, snapshot) {
+                    return _getFutureBuilderStates(snapshot);
+                  },
+                )
               : ProfileImageView(
-            image: _image,
-            imageUrl: widget.url,
-            retrieveDataError: _retrieveDataError,
-          ),
-        ),
-        widget.editable ? Container(
-          width: widget.width,
-          height: widget.height,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.3),
-            shape: BoxShape.circle,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                widget.label,
-                style: theme.textTheme.bodyText2!.copyWith(
-                  color: Colors.white,
+                  image: _image,
+                  imageUrl: widget.url,
+                  retrieveDataError: _retrieveDataError,
                 ),
-              ),
-              SizedBox(height: 8.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  widget.cameraVisible
-                      ?  getUserAction(
-                    Icons.add_a_photo,
-                    onTap: () => setImageByImageSource(
-                      ImageSource.camera,
+        ),
+        widget.editable
+            ? Container(
+                width: widget.width,
+                height: widget.height,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.3),
+                  shape: BoxShape.circle,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      widget.label,
+                      style: theme.textTheme.bodyText2!.copyWith(
+                        color: Colors.white,
+                      ),
                     ),
-                    borderRadius: cameraBorderRadius,
-                  ) : Container(),
-                  widget.galleryVisible
-                      ? getUserAction(
-                    Icons.attach_file,
-                    onTap: () => setImageByImageSource(
-                      ImageSource.gallery,
+                    SizedBox(height: 8.0),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        widget.cameraVisible
+                            ? getUserAction(
+                                Icons.add_a_photo,
+                                onTap: () => setImageByImageSource(
+                                  ImageSource.camera,
+                                ),
+                                borderRadius: cameraBorderRadius,
+                              )
+                            : Container(),
+                        widget.galleryVisible
+                            ? getUserAction(
+                                Icons.attach_file,
+                                onTap: () => setImageByImageSource(
+                                  ImageSource.gallery,
+                                ),
+                                borderRadius: galleryBorderRadius,
+                                showDivider: false,
+                              )
+                            : Container(),
+                      ],
                     ),
-                    borderRadius: galleryBorderRadius,
-                    showDivider: false,
-                  ): Container(),
-                ],
-              ),
-            ],
-          ),
-        ) : SizedBox(),
+                  ],
+                ),
+              )
+            : SizedBox(),
       ],
     );
   }
@@ -201,7 +202,6 @@ class _ProfilePictureState extends State<ProfilePicture> {
     }
   }
 
-
   Future<void> setImageByImageSource(ImageSource imageSource) async {
     bool isPermitted = await Services.checkPermission(
       imageSource,
@@ -217,7 +217,10 @@ class _ProfilePictureState extends State<ProfilePicture> {
     );
 
     if (isPermitted) {
-      final pickedFile = await picker.getImage(source: imageSource);
+      final pickedFile = await picker.getImage(
+        source: imageSource,
+        preferredCameraDevice: widget.preferredCameraDevice,
+      );
       if (pickedFile == null) {
         return;
       }
@@ -245,17 +248,15 @@ class _ProfilePictureState extends State<ProfilePicture> {
   }
 
   void setBorderRadius() {
-
     cameraBorderRadius = BorderRadius.horizontal(
-      left:  circularRadius,
+      left: circularRadius,
       right: widget.cameraVisible && !widget.galleryVisible
           ? circularRadius
           : Radius.zero,
     );
 
     galleryBorderRadius = BorderRadius.horizontal(
-      left: widget.galleryVisible &&
-          !(widget.cameraVisible)
+      left: widget.galleryVisible && !(widget.cameraVisible)
           ? circularRadius
           : Radius.zero,
       right: circularRadius,

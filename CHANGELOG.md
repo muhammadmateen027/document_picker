@@ -1,3 +1,7 @@
+## [0.0.5] - July 14, 2021
+
+* Add option to select camera either rear or front
+
 ## [0.0.4] - June 14, 2021
 
 * Update permission and remove print statement

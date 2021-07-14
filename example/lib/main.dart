@@ -46,6 +46,9 @@ class _MyHomePageState extends State<MyHomePage> {
               url: '',
               editable: true,
               onFileSelection: (file) {},
+              onErrorMessage: (str){
+                print(str);
+              },
             ),
             SizedBox(height: 40),
             DocumentSelector(
