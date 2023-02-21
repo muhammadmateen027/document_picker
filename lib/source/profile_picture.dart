@@ -110,7 +110,7 @@ class _ProfilePictureState extends State<ProfilePicture> {
                   children: <Widget>[
                     Text(
                       widget.label,
-                      style: theme.textTheme.bodyText2!.copyWith(
+                      style: theme.textTheme.bodyMedium!.copyWith(
                         color: Colors.white,
                       ),
                     ),
@@ -165,7 +165,7 @@ class _ProfilePictureState extends State<ProfilePicture> {
             ),
             alignment: Alignment.center,
             padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-            child: Icon(icon, color: theme.buttonColor),
+            child: Icon(icon, color: theme.buttonTheme.colorScheme?.primary),
           ),
         ),
         showDivider ? VerticalDivider(width: 1.0) : Container(),
@@ -217,7 +217,7 @@ class _ProfilePictureState extends State<ProfilePicture> {
     );
 
     if (isPermitted) {
-      final pickedFile = await picker.getImage(
+      final pickedFile = await picker.pickImage(
         source: imageSource,
         preferredCameraDevice: widget.preferredCameraDevice,
       );

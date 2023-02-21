@@ -1,3 +1,6 @@
+## [0.0.6] - February 21, 2023
+* Update the flutter version and upgrade the library support
+
 ## [0.0.5] - July 14, 2021
 
 * Add option to select camera either rear or front

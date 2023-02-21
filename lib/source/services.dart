@@ -8,9 +8,11 @@ import 'package:permission_handler/permission_handler.dart';
 class Services {
   Services._();
 
-  static Future<Null> cropImage(File? imageFile,
-      {Function(File?)? onCrop}) async {
-    File? croppedFile = await ImageCropper.cropImage(
+  static Future<Null> cropImage(
+    File? imageFile, {
+    Function(File?)? onCrop,
+  }) async {
+    CroppedFile? croppedFile = await ImageCropper().cropImage(
       sourcePath: imageFile!.path,
       aspectRatioPresets: Platform.isAndroid
           ? [
@@ -30,23 +32,28 @@ class Services {
               CropAspectRatioPreset.ratio7x5,
               CropAspectRatioPreset.ratio16x9
             ],
-      androidUiSettings: AndroidUiSettings(
-        toolbarTitle: 'Crop image',
-        toolbarColor: Colors.deepOrange,
-        toolbarWidgetColor: Colors.white,
-        initAspectRatio: CropAspectRatioPreset.original,
-        lockAspectRatio: false,
-      ),
-      iosUiSettings: IOSUiSettings(title: 'Crop image'),
+      uiSettings: [
+        AndroidUiSettings(
+            toolbarTitle: 'Cropper',
+            toolbarColor: Colors.deepOrange,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false),
+        IOSUiSettings(
+          title: 'Cropper',
+        ),
+      ],
     );
 
     if (croppedFile != null) {
-      onCrop!(croppedFile);
+      onCrop!(File(croppedFile.path));
     }
   }
 
-  static Future<bool> checkPermission(ImageSource imageSource,
-      {Function(Permission?)? permissionError}) async {
+  static Future<bool> checkPermission(
+    ImageSource imageSource, {
+    Function(Permission?)? permissionError,
+  }) async {
     PermissionStatus status;
 
     if (imageSource == ImageSource.camera) {

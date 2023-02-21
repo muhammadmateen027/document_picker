@@ -1,6 +1,6 @@
 # document_picker
 
-# document_picker 0.0.5
+# document_picker 0.0.6
 A document picker widget comes with latest feature to support in your project design.
 
 ## Purpose
@@ -37,7 +37,7 @@ Open your `android/app/src/main/AndroidManifest.xml` to add permission and activ
 ## Installing
 Add this to your package's pubspec.yaml file:
 
-dependencies: `document_picker: ^0.0.5`
+dependencies: `document_picker: ^0.0.6`
 
 
 ## Sample Usage

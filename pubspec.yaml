@@ -1,20 +1,20 @@
 name: document_picker
 description: Flutter plugin to pick, capture images or add signature in your form
-version: 0.0.5
+version: 0.0.6
 homepage: https://github.com/muhammadmateen027/document_picker
 
 environment:
-  sdk: ">=2.13.0 <3.0.0"
+  sdk: ">=2.19.0 <3.0.0"
 
 dependencies:
-  dotted_border: ^2.0.0
+  dotted_border: ^2.0.0+3
   flutter:
     sdk: flutter
-  image_cropper: ^1.4.0
-  image_picker: ^0.8.0+3
-  path_provider: ^2.0.2
-  permission_handler: ^8.0.1
-  signature: ^4.1.1
+  image_cropper: ^3.0.1
+  image_picker: ^0.8.6+2
+  path_provider: ^2.0.12
+  permission_handler: ^10.2.0
+  signature: ^5.3.2
 
 dev_dependencies:
   flutter_test:

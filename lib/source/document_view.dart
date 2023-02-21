@@ -8,14 +8,19 @@ class DocumentView extends StatelessWidget {
   final String imageUrl;
   final String asset;
 
-  const DocumentView({Key? key, required this.retrieveDataError, required this.image, required this.imageUrl, required this.asset}) : super(key: key);
+  const DocumentView({
+    Key? key,
+    required this.retrieveDataError,
+    required this.image,
+    required this.imageUrl,
+    required this.asset,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     Widget widgetView;
     final Text? retrieveError = _retrieveErrorWidget();
     if (retrieveError != null) {
-
       return retrieveError;
     }
 
@@ -29,7 +34,7 @@ class DocumentView extends StatelessWidget {
               child: CircularProgressIndicator(
                 value: loadingProgress.expectedTotalBytes != null
                     ? loadingProgress.cumulativeBytesLoaded /
-                    loadingProgress.expectedTotalBytes!
+                        loadingProgress.expectedTotalBytes!
                     : null,
               ),
             );

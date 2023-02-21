@@ -1,9 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:dotted_border/dotted_border.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -44,9 +42,9 @@ class DocumentSelector extends StatefulWidget {
     this.onErrorMessage,
     this.label = 'Select an image',
     this.cameraPermissionErrorMessage =
-    'Please allow camera permission from Settings',
+        'Please allow camera permission from Settings',
     this.galleryPermissionErrorMessage =
-    'Please allow gallery permission from Settings',
+        'Please allow gallery permission from Settings',
     this.imageNotSelectedMessage = 'You have not yet picked/captured an image.',
     this.iconsBackgroundColor = Colors.green,
     this.iconColor = Colors.white,
@@ -61,7 +59,7 @@ class _DocumentSelectorState extends State<DocumentSelector> {
   late ThemeData theme;
   String _retrieveDataError = '';
   late String imageUrl;
-  File? _image = null;
+  File? _image;
   bool showSignaturePad = false;
   late SignatureController _signatureController;
   final picker = ImagePicker();
@@ -115,45 +113,42 @@ class _DocumentSelectorState extends State<DocumentSelector> {
             ),
             child: widget.editable
                 ? Stack(
-              children: <Widget>[
-                Center(
-                  child: Platform.isAndroid
-                      ? FutureBuilder<void>(
-                    future: Services.retrieveLostData(
-                        picker,
-                        onLoaded: (file) {
-                          setImage(file);
-                        },
-                        onError: (str) {
-                          _retrieveDataError = str;
-                        }
-                    ),
-                    builder: (_, snapshot) {
-                      return _getFutureBuilderStates(snapshot);
-                    },
+                    children: <Widget>[
+                      Center(
+                        child: Platform.isAndroid
+                            ? FutureBuilder<void>(
+                                future: Services.retrieveLostData(picker,
+                                    onLoaded: (file) {
+                                  setImage(file);
+                                }, onError: (str) {
+                                  _retrieveDataError = str;
+                                }),
+                                builder: (_, snapshot) {
+                                  return _getFutureBuilderStates(snapshot);
+                                },
+                              )
+                            : DocumentView(
+                                image: _image,
+                                imageUrl: imageUrl,
+                                retrieveDataError: _retrieveDataError,
+                                asset: widget.imageAsset,
+                              ),
+                      ),
+                      !showSignaturePad
+                          ? _imagePickers(title)
+                          : _signaturePad(),
+                    ],
                   )
-                      : DocumentView(
-                    image: _image,
-                    imageUrl: imageUrl,
-                    retrieveDataError: _retrieveDataError,
-                    asset: widget.imageAsset,
-                  ),
-                ),
-                !showSignaturePad
-                    ? _imagePickers(title)
-                    : _signaturePad(),
-              ],
-            )
                 : Container(
-              width: double.infinity,
-              color: Colors.white,
-              child: DocumentView(
-                image: _image,
-                imageUrl: imageUrl,
-                retrieveDataError: _retrieveDataError,
-                asset: widget.imageAsset,
-              ),
-            ),
+                    width: double.infinity,
+                    color: Colors.white,
+                    child: DocumentView(
+                      image: _image,
+                      imageUrl: imageUrl,
+                      retrieveDataError: _retrieveDataError,
+                      asset: widget.imageAsset,
+                    ),
+                  ),
           ),
         ),
       ),
@@ -288,7 +283,7 @@ class _DocumentSelectorState extends State<DocumentSelector> {
         children: <Widget>[
           Text(
             title,
-            style: theme.textTheme.bodyText2!.copyWith(
+            style: theme.textTheme.bodyMedium!.copyWith(
               color: Colors.white,
             ),
           ),
@@ -298,33 +293,33 @@ class _DocumentSelectorState extends State<DocumentSelector> {
             children: <Widget>[
               widget.handwritingVisible
                   ? getUserAction(
-                Icons.gesture,
-                onTap: () {
-                  setState(() {
-                    showSignaturePad = true;
-                  });
-                },
-                borderRadius: handwritingBorderRadius,
-              )
+                      Icons.gesture,
+                      onTap: () {
+                        setState(() {
+                          showSignaturePad = true;
+                        });
+                      },
+                      borderRadius: handwritingBorderRadius,
+                    )
                   : Container(),
               widget.cameraVisible
                   ? getUserAction(
-                Icons.add_a_photo,
-                onTap: () => setImageByImageSource(
-                  ImageSource.camera,
-                ),
-                borderRadius: cameraBorderRadius,
-              )
+                      Icons.add_a_photo,
+                      onTap: () => setImageByImageSource(
+                        ImageSource.camera,
+                      ),
+                      borderRadius: cameraBorderRadius,
+                    )
                   : Container(),
               widget.galleryVisible
                   ? getUserAction(
-                Icons.attach_file,
-                onTap: () => setImageByImageSource(
-                  ImageSource.gallery,
-                ),
-                borderRadius: galleryBorderRadius,
-                showDivider: false,
-              )
+                      Icons.attach_file,
+                      onTap: () => setImageByImageSource(
+                        ImageSource.gallery,
+                      ),
+                      borderRadius: galleryBorderRadius,
+                      showDivider: false,
+                    )
                   : Container(),
             ],
           ),
@@ -334,11 +329,11 @@ class _DocumentSelectorState extends State<DocumentSelector> {
   }
 
   Widget getUserAction(
-      IconData icon, {
-        required VoidCallback onTap,
-        required BorderRadius borderRadius,
-        bool showDivider = true,
-      }) {
+    IconData icon, {
+    required VoidCallback onTap,
+    required BorderRadius borderRadius,
+    bool showDivider = true,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
@@ -360,7 +355,6 @@ class _DocumentSelectorState extends State<DocumentSelector> {
   }
 
   Future<void> setImageByImageSource(ImageSource imageSource) async {
-
     bool isPermitted = await Services.checkPermission(
       imageSource,
       permissionError: (permission) {
@@ -375,7 +369,7 @@ class _DocumentSelectorState extends State<DocumentSelector> {
     );
 
     if (isPermitted) {
-      final pickedFile = await picker.getImage(source: imageSource);
+      final pickedFile = await picker.pickImage(source: imageSource);
       if (pickedFile == null) {
         return;
       }
@@ -406,7 +400,7 @@ class _DocumentSelectorState extends State<DocumentSelector> {
     handwritingBorderRadius = BorderRadius.horizontal(
       left: widget.handwritingVisible ? circularRadius : Radius.zero,
       right: widget.handwritingVisible &&
-          !(widget.cameraVisible || widget.galleryVisible)
+              !(widget.cameraVisible || widget.galleryVisible)
           ? circularRadius
           : Radius.zero,
     );
@@ -422,7 +416,7 @@ class _DocumentSelectorState extends State<DocumentSelector> {
 
     galleryBorderRadius = BorderRadius.horizontal(
       left: widget.galleryVisible &&
-          !(widget.handwritingVisible || widget.cameraVisible)
+              !(widget.handwritingVisible || widget.cameraVisible)
           ? circularRadius
           : Radius.zero,
       right: widget.galleryVisible ? circularRadius : Radius.zero,
